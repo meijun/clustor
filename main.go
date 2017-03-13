@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -23,7 +24,9 @@ func main() {
 		http.HandleFunc("/in", receiveInfo)
 		log.Fatal(http.ListenAndServe(":7160", nil))
 	}
-	for range time.Tick(10 * time.Second) {
+	rand.Seed(time.Now().UnixNano())
+	time.Sleep(time.Duration(rand.Intn(60)) * time.Second)
+	for range time.Tick(60 * time.Second) {
 		sendInfo()
 	}
 }
@@ -33,9 +36,12 @@ func sendInfo() {
 			log.Printf("Send info: %v\n", r)
 		}
 	}()
-	_, err := http.Post("http://admin:7160/in", "text/plain", strings.NewReader(getInfo()))
+	resp, err := http.Post("http://admin:7160/in", "text/plain", strings.NewReader(getInfo()))
 	if err != nil {
 		log.Printf("Post error: %v\n", err)
+	}
+	if err = resp.Body.Close(); err != nil {
+		log.Printf("Close resp body: %v\n", err)
 	}
 }
 
