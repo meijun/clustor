@@ -22,21 +22,29 @@ func main() {
 		http.HandleFunc("/", printInfo)
 		http.HandleFunc("/in", receiveInfo)
 		go func() {
-			log.Fatal(http.ListenAndServe(":9999", nil))
+			log.Fatal(http.ListenAndServe(":7160", nil))
 		}()
 	}
 	for range time.Tick(10 * time.Second) {
-		_, err := http.Post("http://admin:9999/in", "text/plain", strings.NewReader(getInfo()))
-		if err != nil {
-			log.Printf("Post error: %v\n", err)
+		sendInfo()
+	}
+}
+func sendInfo() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Send info: %v\n", r)
 		}
+	}()
+	_, err := http.Post("http://admin:7160/in", "text/plain", strings.NewReader(getInfo()))
+	if err != nil {
+		log.Printf("Post error: %v\n", err)
 	}
 }
 
 const FORMATTER = "%-6s%6s%6s%10s%6s%6s"
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("recv " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "top-user", "%cpu", "%mem") + "\n"))
+	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "top-user", "%cpu", "%mem") + "\n"))
 	for _, s := range names {
 		w.Write([]byte(infoTime[s].Format("1504 ") + infoContent[s]))
 		w.Write([]byte("\n"))
