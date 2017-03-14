@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,6 +23,7 @@ func main() {
 	if !*agent {
 		http.HandleFunc("/", printInfo)
 		http.HandleFunc("/in", receiveInfo)
+		http.HandleFunc("/ver", printVer)
 		log.Fatal(http.ListenAndServe(":7160", nil))
 	}
 	rand.Seed(time.Now().UnixNano())
@@ -30,6 +32,7 @@ func main() {
 		sendInfo()
 	}
 }
+
 func sendInfo() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -53,6 +56,15 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(infoTime[s].Format("1504 ") + infoContent[s]))
 		w.Write([]byte("\n"))
 	}
+	view++
+}
+
+var view uint64 = 0
+
+func printVer(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
+	w.Write([]byte("version: 0.1\n"))
+	w.Write([]byte("by meijun\n"))
 }
 
 var names = []string{ // "admin",
