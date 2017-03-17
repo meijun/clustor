@@ -42,6 +42,7 @@ func sendInfo() {
 	resp, err := http.Post("http://admin:7160/in", "text/plain", strings.NewReader(getInfo()))
 	if err != nil {
 		log.Printf("Post error: %v\n", err)
+		return
 	}
 	if err = resp.Body.Close(); err != nil {
 		log.Printf("Close resp body: %v\n", err)
