@@ -63,7 +63,7 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 0.1\n"))
+	w.Write([]byte("version: 0.1.1\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
@@ -77,6 +77,11 @@ var infoTime = map[string]time.Time{}
 var infoContent = map[string]string{}
 
 func receiveInfo(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Receive info: %v\n", r)
+		}
+	}()
 	var info string
 	if bs, err := ioutil.ReadAll(r.Body); err != nil {
 		info = fmt.Sprintf("Read request error: %v", err)
