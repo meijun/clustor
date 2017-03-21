@@ -34,26 +34,27 @@ func main() {
 		rand.Seed(time.Now().UnixNano())
 		time.Sleep(time.Duration(rand.Intn(*duration)) * time.Second)
 		for range time.Tick(time.Duration(*duration) * time.Second) {
-			for _, m := range urls {
-				sendInfo(m)
+			info := getInfo()
+			for _, url := range urls {
+				sendInfo(url, info)
 			}
 		}
 	}
 }
 
-func sendInfo(url string) {
+func sendInfo(url string, info string) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Send info url: %s, error: %v\n", url, r)
 		}
 	}()
-	resp, err := http.Post(url+"/in", "text/plain", strings.NewReader(getInfo()))
+	resp, err := http.Post(url+"/in", "text/plain", strings.NewReader(info))
 	if err != nil {
-		log.Printf("Post url: %s, error: %v\n", url, err)
+		log.Printf("Post error: %v\n", err)
 		return
 	}
 	if err = resp.Body.Close(); err != nil {
-		log.Printf("Close resp body url: %s, error: %v\n", url, err)
+		log.Printf("Close resp body error: %v\n", err)
 	}
 }
 
@@ -84,7 +85,7 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 0.2\n"))
+	w.Write([]byte("version: 0.2.1\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
