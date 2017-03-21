@@ -12,47 +12,67 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func main() {
-	agent := flag.Bool("agent", false, "run as agent")
+	send := flag.String("send", "", "masters, separated by ','")
+	listen := flag.String("listen", "", "port to listen")
+	duration := flag.Int("duration", 60, "duration seconds")
 	flag.Parse()
-	if !*agent {
+	if *listen != "" {
 		http.HandleFunc("/", printInfo)
 		http.HandleFunc("/in", receiveInfo)
 		http.HandleFunc("/ver", printVer)
-		log.Fatal(http.ListenAndServe(":7160", nil))
+		log.Fatal(http.ListenAndServe(*listen, nil))
 	}
-	rand.Seed(time.Now().UnixNano())
-	time.Sleep(time.Duration(rand.Intn(60)) * time.Second)
-	for range time.Tick(60 * time.Second) {
-		sendInfo()
+	if *send != "" {
+		urls := strings.Split(*send, ",")
+		rand.Seed(time.Now().UnixNano())
+		time.Sleep(time.Duration(rand.Intn(*duration)) * time.Second)
+		for range time.Tick(time.Duration(*duration) * time.Second) {
+			for _, m := range urls {
+				sendInfo(m)
+			}
+		}
 	}
 }
 
-func sendInfo() {
+func sendInfo(url string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Send info: %v\n", r)
+			log.Printf("Send info url: %s, error: %v\n", url, r)
 		}
 	}()
-	resp, err := http.Post("http://admin:7160/in", "text/plain", strings.NewReader(getInfo()))
+	resp, err := http.Post(url+"/in", "text/plain", strings.NewReader(getInfo()))
 	if err != nil {
-		log.Printf("Post error: %v\n", err)
+		log.Printf("Post url: %s, error: %v\n", url, err)
 		return
 	}
 	if err = resp.Body.Close(); err != nil {
-		log.Printf("Close resp body: %v\n", err)
+		log.Printf("Close resp body url: %s, error: %v\n", url, err)
 	}
 }
 
-const FORMATTER = "%-6s%6s%6s%10s%6s%6s"
+const FORMATTER = "%-6s%5s%5s%7s%5s%7s%5s"
+const USER_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "top-user", "%cpu", "%mem") + "\n"))
+	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "user", "%cpu", "user", "%mem") + "\n"))
+	names := []string{}
+	for name := range infoContent {
+		names = append(names, name)
+	}
+	sort.Slice(names, func(i, j int) bool {
+		a, b := names[i], names[j]
+		if len(a) != len(b) {
+			return len(a) < len(b)
+		}
+		return a < b
+	})
 	for _, s := range names {
 		w.Write([]byte(infoTime[s].Format("1504 ") + infoContent[s]))
 		w.Write([]byte("\n"))
@@ -64,17 +84,12 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 0.1.1\n"))
+	w.Write([]byte("version: 0.2\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
-var names = []string{ // "admin",
-	"node1", "node2", "node3", "node4", "node5",
-	"node6", "node7", "node8", "node9", "node10",
-	"node11", "node12", "node13", "node14",
-	"node15", "node16", "node17", "node18",
-}
 var infoTime = map[string]time.Time{}
+
 var infoContent = map[string]string{}
 
 func receiveInfo(w http.ResponseWriter, r *http.Request) {
@@ -99,20 +114,33 @@ func getInfo() string {
 	node := hostname()
 	cpu := fmt.Sprintf("%.1f", getCPUUsage()*100)
 	mem := fmt.Sprintf("%.1f", getMemUsage()*100)
-	user, uCPU, uMem := getUserInfo()
-	info := fmt.Sprintf(FORMATTER, node, cpu, mem, user, uCPU, uMem)
+	userCPU, uCPU := getUserCPU()
+	userMem, uMem := getUserMem()
+	if len(userCPU) > USER_NAME_LENGTH {
+		userCPU = userCPU[:USER_NAME_LENGTH]
+	}
+	if len(userMem) > USER_NAME_LENGTH {
+		userMem = userMem[:USER_NAME_LENGTH]
+	}
+	info := fmt.Sprintf(FORMATTER, node, cpu, mem, userCPU, uCPU, userMem, uMem)
 	return info
 }
 
 var SPLIT_BY_SPACE = regexp.MustCompile(`\s+`)
 
-func getUserInfo() (string, string, string) {
+func getUserCPU() (string, string) {
 	first := strings.Split(cmd("ps", "-aux", "--sort=-pcpu"), "\n")[1]
 	firsts := SPLIT_BY_SPACE.Split(first, 5)
 	user := firsts[0]
 	uCPU := firsts[2]
+	return user, uCPU
+}
+func getUserMem() (string, string) {
+	first := strings.Split(cmd("ps", "-aux", "--sort=-pmem"), "\n")[1]
+	firsts := SPLIT_BY_SPACE.Split(first, 5)
+	user := firsts[0]
 	uMem := firsts[3]
-	return user, uCPU, uMem
+	return user, uMem
 }
 
 func hostname() string {
