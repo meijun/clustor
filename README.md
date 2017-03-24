@@ -7,7 +7,7 @@ Simplest cluster monitor
 
 ## Download & build
 ```bash
-go install github.com/meijun/clustor
+go get github.com/meijun/clustor
 ```
 
 # Deployment
