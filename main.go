@@ -58,11 +58,11 @@ func sendInfo(url string, info string) {
 	}
 }
 
-const FORMATTER = "%-6s%5s%5s%7s%5s%7s%5s"
+const FORMATTER = "%-6s%5s%5s%8s%5s%7s%5s"
 const USER_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "user", "%cpu", "user", "%mem") + "\n"))
+	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "c-user", "%cpu", "m-user", "%mem") + "\n"))
 	names := []string{}
 	for name := range infoContent {
 		names = append(names, name)
@@ -85,7 +85,7 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 0.2.1\n"))
+	w.Write([]byte("version: 1.0\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
