@@ -58,8 +58,9 @@ func sendInfo(url string, info string) {
 	}
 }
 
-const FORMATTER = "%-6s%5s%5s%8s%5s%7s%5s"
+const FORMATTER = "%-7s%5s%5s%7s%5s%7s%5s"
 const USER_NAME_LENGTH = 6
+const NODE_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "c-user", "%cpu", "m-user", "%mem") + "\n"))
@@ -85,7 +86,7 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 1.0\n"))
+	w.Write([]byte("version: 1.1\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
@@ -115,15 +116,18 @@ func getInfo() string {
 	node := hostname()
 	cpu := fmt.Sprintf("%.1f", getCPUUsage()*100)
 	mem := fmt.Sprintf("%.1f", getMemUsage()*100)
-	userCPU, uCPU := getUserCPU()
-	userMem, uMem := getUserMem()
-	if len(userCPU) > USER_NAME_LENGTH {
-		userCPU = userCPU[:USER_NAME_LENGTH]
+	cUser, uCPU := getUserCPU()
+	mUser, uMem := getUserMem()
+	if len(node) > NODE_NAME_LENGTH {
+		node = node[len(node)-NODE_NAME_LENGTH:]
 	}
-	if len(userMem) > USER_NAME_LENGTH {
-		userMem = userMem[:USER_NAME_LENGTH]
+	if len(cUser) > USER_NAME_LENGTH {
+		cUser = cUser[len(cUser)-USER_NAME_LENGTH:]
 	}
-	info := fmt.Sprintf(FORMATTER, node, cpu, mem, userCPU, uCPU, userMem, uMem)
+	if len(mUser) > USER_NAME_LENGTH {
+		mUser = mUser[len(mUser)-USER_NAME_LENGTH:]
+	}
+	info := fmt.Sprintf(FORMATTER, node, cpu, mem, cUser, uCPU, mUser, uMem)
 	return info
 }
 
