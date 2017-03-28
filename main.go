@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -65,6 +66,8 @@ const NODE_NAME_LENGTH = 6
 func printInfo(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "c-user", "%cpu", "m-user", "%mem") + "\n"))
 	names := []string{}
+	infoMux.RLock()
+	defer infoMux.RUnlock()
 	for name := range infoContent {
 		names = append(names, name)
 	}
@@ -91,8 +94,8 @@ func printVer(w http.ResponseWriter, r *http.Request) {
 }
 
 var infoTime = map[string]time.Time{}
-
 var infoContent = map[string]string{}
+var infoMux = sync.RWMutex{}
 
 func receiveInfo(w http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -107,6 +110,8 @@ func receiveInfo(w http.ResponseWriter, r *http.Request) {
 		info = string(bs)
 	}
 	name := SPLIT_BY_SPACE.Split(info, 2)[0]
+	infoMux.Lock()
+	defer infoMux.Unlock()
 	infoTime[name] = time.Now()
 	infoContent[name] = info
 	w.Write([]byte("OK"))
