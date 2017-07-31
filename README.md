@@ -3,7 +3,8 @@ Simplest cluster monitor
 
 ### Build
 - [Install Go](https://golang.org/doc/install)
-- Download & build: `go get github.com/meijun/clustor`
+- Download & build:
+  - `go get github.com/meijun/clustor`
 
 ### Deployment
 
