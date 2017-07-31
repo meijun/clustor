@@ -1,6 +1,6 @@
 package main
 
-import 
+import (
 	"flag"
 	"fmt"
 	"github.com/c9s/goprocinfo/linux"
