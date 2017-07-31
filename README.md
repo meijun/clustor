@@ -1,4 +1,4 @@
-# clustor
+# clustor [![Build Status](https://travis-ci.org/meijun/clustor.svg?branch=master)](https://travis-ci.org/meijun/clustor)
 Simplest cluster monitor
 
 # Build
