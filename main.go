@@ -59,12 +59,12 @@ func sendInfo(url string, info string) {
 	}
 }
 
-const FORMATTER = "%-7s%5s%5s%7s%5s%7s%5s"
-const USER_NAME_LENGTH = 6
+const FORMATTER = "%-7s%6s%5s%5s%8s%5s%5s"
+const USER_NAME_LENGTH = 7
 const NODE_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "c-user", "%cpu", "m-user", "%mem") + "\n"))
+	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "gpu", "%cpu", "%mem", "topuser", "%cpu", "%mem") + "\n"))
 	names := []string{}
 	infoMux.RLock()
 	defer infoMux.RUnlock()
@@ -89,7 +89,7 @@ var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 1.1\n"))
+	w.Write([]byte("version: 2.0\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
@@ -121,6 +121,8 @@ func getInfo() string {
 	node := hostname()
 	cpu := fmt.Sprintf("%.1f", getCPUUsage()*100)
 	mem := fmt.Sprintf("%.1f", getMemUsage()*100)
+	gpuUsed, gpuAll := getGPUUsage()
+	gpu := fmt.Sprintf("%d/%d", gpuUsed, gpuAll)
 	cUser, uCPU := getUserCPU()
 	mUser, uMem := getUserMem()
 	if len(node) > NODE_NAME_LENGTH {
@@ -132,7 +134,7 @@ func getInfo() string {
 	if len(mUser) > USER_NAME_LENGTH {
 		mUser = mUser[len(mUser)-USER_NAME_LENGTH:]
 	}
-	info := fmt.Sprintf(FORMATTER, node, cpu, mem, cUser, uCPU, mUser, uMem)
+	info := fmt.Sprintf(FORMATTER, node, gpu, cpu, mem, cUser, uCPU, uMem)
 	return info
 }
 
@@ -151,6 +153,26 @@ func getUserMem() (string, string) {
 	user := firsts[0]
 	uMem := firsts[3]
 	return user, uMem
+}
+
+const GPU_MEMORY_THRESHOLD = 64
+
+func getGPUUsage() (int, int) {
+	output := cmd("nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits")
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	used := 0
+	all := 0
+	for _, line := range lines {
+		mem, err := strconv.ParseInt(line, 10, 0)
+		if err != nil {
+			return 0, 0
+		}
+		if mem > GPU_MEMORY_THRESHOLD {
+			used++
+		}
+		all++
+	}
+	return used, all
 }
 
 func hostname() string {
