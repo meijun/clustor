@@ -60,7 +60,7 @@ func sendInfo(url string, info string) {
 }
 
 const FORMATTER = "%-6s %4s %4s %-5s %8s %4s %4s"
-const USER_NAME_LENGTH = 7
+const USER_NAME_LENGTH = 8
 const NODE_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
