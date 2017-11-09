@@ -59,12 +59,12 @@ func sendInfo(url string, info string) {
 	}
 }
 
-const FORMATTER = "%-7s%6s%5s%5s%8s%5s%5s"
+const FORMATTER = "%-6s %4s %4s %-5s %8s %4s %4s"
 const USER_NAME_LENGTH = 7
 const NODE_NAME_LENGTH = 6
 
 func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "gpu", "%cpu", "%mem", "topuser", "%cpu", "%mem") + "\n"))
+	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "gpu", "top", "%cpu", "%mem") + "\n"))
 	names := []string{}
 	infoMux.RLock()
 	defer infoMux.RUnlock()
@@ -134,7 +134,7 @@ func getInfo() string {
 	if len(mUser) > USER_NAME_LENGTH {
 		mUser = mUser[len(mUser)-USER_NAME_LENGTH:]
 	}
-	info := fmt.Sprintf(FORMATTER, node, gpu, cpu, mem, cUser, uCPU, uMem)
+	info := fmt.Sprintf(FORMATTER, node, cpu, mem, gpu, cUser, uCPU, uMem)
 	return info
 }
 
