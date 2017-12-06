@@ -18,11 +18,14 @@ import (
 	"sync"
 	"time"
 )
+var (
+	send     = flag.String("send", "", "masters, separated by ','")
+	listen   = flag.String("listen", "", "port to listen")
+	duration = flag.Int("duration", 60, "duration seconds")
+	gpuMem   = flag.Int("gpumem", 1024, "GPU memory threshold")
+)
 
 func main() {
-	send := flag.String("send", "", "masters, separated by ','")
-	listen := flag.String("listen", "", "port to listen")
-	duration := flag.Int("duration", 60, "duration seconds")
 	flag.Parse()
 	if *listen != "" {
 		http.HandleFunc("/", printInfo)
@@ -88,8 +91,8 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("view: " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("version: 2.0\n"))
+	w.Write([]byte("clustor v2.1.0\n"))
+	w.Write([]byte("viewed " + strconv.FormatUint(view, 10) + "\n"))
 	w.Write([]byte("by meijun\n"))
 }
 
@@ -155,8 +158,6 @@ func getUserMem() (string, string) {
 	return user, uMem
 }
 
-const GPU_MEMORY_THRESHOLD = 64
-
 func getGPUUsage() (int, int) {
 	output := cmd("nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits")
 	lines := strings.Split(strings.TrimSpace(output), "\n")
@@ -167,7 +168,7 @@ func getGPUUsage() (int, int) {
 		if err != nil {
 			return 0, 0
 		}
-		if mem > GPU_MEMORY_THRESHOLD {
+		if int(mem) > *gpuMem {
 			used++
 		}
 		all++
@@ -190,7 +191,7 @@ func getMemUsage() float64 {
 	if mem, err := linux.ReadMemInfo("/proc/meminfo"); err != nil {
 		return math.NaN()
 	} else {
-		return 1 - float64(mem.MemFree)/float64(mem.MemTotal)
+		return 1 - float64(mem.MemFree + mem.Cached + mem.Buffers)/float64(mem.MemTotal)
 	}
 }
 
