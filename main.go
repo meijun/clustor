@@ -91,7 +91,7 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("clustor v2.1.0\n"))
+	w.Write([]byte("clustor v2.1.1\n"))
 	w.Write([]byte("viewed " + strconv.FormatUint(view, 10) + "\n"))
 	w.Write([]byte("by meijun\n"))
 }
@@ -191,7 +191,7 @@ func getMemUsage() float64 {
 	if mem, err := linux.ReadMemInfo("/proc/meminfo"); err != nil {
 		return math.NaN()
 	} else {
-		return 1 - float64(mem.MemFree + mem.Cached + mem.Buffers)/float64(mem.MemTotal)
+		return 1 - float64(mem.MemAvailable)/float64(mem.MemTotal)
 	}
 }
 
