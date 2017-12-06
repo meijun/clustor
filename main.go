@@ -91,9 +91,8 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("clustor v2.1.1\n"))
+	w.Write([]byte("clustor v2.1.1 by meijun\n"))
 	w.Write([]byte("viewed " + strconv.FormatUint(view, 10) + "\n"))
-	w.Write([]byte("by meijun\n"))
 }
 
 var infoTime = map[string]time.Time{}
