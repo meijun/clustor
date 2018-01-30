@@ -91,7 +91,7 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 var view uint64 = 0
 
 func printVer(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("clustor v2.1.1 by meijun\n"))
+	w.Write([]byte("clustor v2.1.2 by meijun\n"))
 	w.Write([]byte("viewed " + strconv.FormatUint(view, 10) + "\n"))
 }
 
@@ -121,8 +121,8 @@ func receiveInfo(w http.ResponseWriter, r *http.Request) {
 
 func getInfo() string {
 	node := hostname()
-	cpu := fmt.Sprintf("%.1f", getCPUUsage()*100)
-	mem := fmt.Sprintf("%.1f", getMemUsage()*100)
+	cpu := fmt.Sprintf("%.1f", math.Min(99.9, getCPUUsage()*100))
+	mem := fmt.Sprintf("%.1f", math.Min(99.9, getMemUsage()*100))
 	gpuUsed, gpuAll := getGPUUsage()
 	gpu := fmt.Sprintf("%d/%d", gpuUsed, gpuAll)
 	cUser, uCPU := getUserCPU()
