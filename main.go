@@ -62,13 +62,13 @@ func sendInfo(url string, info string) {
 	}
 }
 
-const FORMATTER = "%-6s %4s %4s %-5s %8s %4s %4s"
-const USER_NAME_LENGTH = 8
-const NODE_NAME_LENGTH = 6
+const formatter = "%-6s %4s %4s %-5s %8s %4s %4s"
+const userNameLength = 8
+const nodeNameLength = 6
 
-func printInfo(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("time " + fmt.Sprintf(FORMATTER, "node", "%cpu", "%mem", "gpu", "top", "%cpu", "%mem") + "\n"))
-	names := []string{}
+func printInfo(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("time " + fmt.Sprintf(formatter, "node", "%cpu", "%mem", "gpu", "top", "%cpu", "%mem") + "\n"))
+	var names []string
 	infoMux.RLock()
 	defer infoMux.RUnlock()
 	for name := range infoContent {
@@ -90,7 +90,7 @@ func printInfo(w http.ResponseWriter, r *http.Request) {
 
 var view uint64 = 0
 
-func printVer(w http.ResponseWriter, r *http.Request) {
+func printVer(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("clustor v2.1.2 by meijun\n"))
 	w.Write([]byte("viewed " + strconv.FormatUint(view, 10) + "\n"))
 }
@@ -111,7 +111,7 @@ func receiveInfo(w http.ResponseWriter, r *http.Request) {
 	} else {
 		info = string(bs)
 	}
-	name := SPLIT_BY_SPACE.Split(info, 2)[0]
+	name := splitBySpace.Split(info, 2)[0]
 	infoMux.Lock()
 	defer infoMux.Unlock()
 	infoTime[name] = time.Now()
@@ -127,31 +127,31 @@ func getInfo() string {
 	gpu := fmt.Sprintf("%d/%d", gpuUsed, gpuAll)
 	cUser, uCPU := getUserCPU()
 	mUser, uMem := getUserMem()
-	if len(node) > NODE_NAME_LENGTH {
-		node = node[len(node)-NODE_NAME_LENGTH:]
+	if len(node) > nodeNameLength {
+		node = node[len(node)-nodeNameLength:]
 	}
-	if len(cUser) > USER_NAME_LENGTH {
-		cUser = cUser[len(cUser)-USER_NAME_LENGTH:]
+	if len(cUser) > userNameLength {
+		cUser = cUser[len(cUser)-userNameLength:]
 	}
-	if len(mUser) > USER_NAME_LENGTH {
-		mUser = mUser[len(mUser)-USER_NAME_LENGTH:]
+	if len(mUser) > userNameLength {
+		mUser = mUser[len(mUser)-userNameLength:]
 	}
-	info := fmt.Sprintf(FORMATTER, node, cpu, mem, gpu, cUser, uCPU, uMem)
+	info := fmt.Sprintf(formatter, node, cpu, mem, gpu, cUser, uCPU, uMem)
 	return info
 }
 
-var SPLIT_BY_SPACE = regexp.MustCompile(`\s+`)
+var splitBySpace = regexp.MustCompile(`\s+`)
 
 func getUserCPU() (string, string) {
 	first := strings.Split(cmd("ps", "-aux", "--sort=-pcpu"), "\n")[1]
-	firsts := SPLIT_BY_SPACE.Split(first, 5)
+	firsts := splitBySpace.Split(first, 5)
 	user := firsts[0]
 	uCPU := firsts[2]
 	return user, uCPU
 }
 func getUserMem() (string, string) {
 	first := strings.Split(cmd("ps", "-aux", "--sort=-pmem"), "\n")[1]
-	firsts := SPLIT_BY_SPACE.Split(first, 5)
+	firsts := splitBySpace.Split(first, 5)
 	user := firsts[0]
 	uMem := firsts[3]
 	return user, uMem
