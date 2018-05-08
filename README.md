@@ -1,15 +1,21 @@
-# clustor [![Build Status](https://travis-ci.org/meijun/clustor.svg?branch=master)](https://travis-ci.org/meijun/clustor)
+# clustor
+
+[![Build Status](https://travis-ci.org/meijun/clustor.svg?branch=master)](https://travis-ci.org/meijun/clustor)
+
 Simplest cluster monitor
 
-### Build
-- [Install Go](https://golang.org/doc/install)
-- Download & build:
+### Download or Build
+
+- Download binary
+  - See [releases](https://github.com/meijun/clustor/releases)
+- Or build from source:
+  - [Install Go](https://golang.org/doc/install)
   - `go get github.com/meijun/clustor`
+  - The path of the executable binary is `$GOPATH/bin/clustor`.
 
 ### Deployment
 
-The path of the executable binary is `$GOPATH/bin/clustor`,
-and you can copy the binary to any host, without installing Go environment again.
+You can copy the binary to any host.
 
 - Run as a web server:
   - Copy the binary to the web server host.
